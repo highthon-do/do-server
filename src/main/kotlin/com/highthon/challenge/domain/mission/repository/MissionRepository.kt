@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
-import java.time.LocalDate
 
 @Repository
 interface MissionRepository : JpaRepository<MissionEntity, Long> {
@@ -25,28 +24,6 @@ interface MissionRepository : JpaRepository<MissionEntity, Long> {
         nativeQuery = true
     )
     fun findMissionDatesByWriterId(@Param("writerId") writerId: Long): List<java.sql.Date>
-
-    @Query(
-        """
-    SELECT COUNT(*) FROM (
-        SELECT writer_id, COUNT(id) AS cnt
-        FROM missions
-        WHERE is_private = false
-        GROUP BY writer_id
-        HAVING COUNT(id) > (
-            SELECT COUNT(*) * (:percent / 100.0)
-            FROM (
-                SELECT writer_id
-                FROM missions
-                WHERE is_private = false
-                GROUP BY writer_id
-            ) AS total
-        )
-    ) AS ranked
-    WHERE ranked.writer_id = :userId
-    """, nativeQuery = true
-    )
-    fun isUserInTopPercent(userId: Long, percent: Int = 10): Int
 
     fun findByIdAndWriterId(
         id: Long,

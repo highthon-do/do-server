@@ -36,3 +36,6 @@ management:
     web:
       exposure:
         include: health
+
+server:
+  address: 10.10.6.55

@@ -3,7 +3,6 @@ package com.highthon.challenge.global.config.security
 import com.highthon.challenge.global.security.handler.CustomAccessDeniedHandler
 import com.highthon.challenge.global.security.handler.CustomAuthenticationEntryPoint
 import com.highthon.challenge.global.security.token.filter.TokenAuthenticationFilter
-import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory.disable
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
@@ -18,7 +17,11 @@ import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
-class SecurityConfig(private val tokenAuthenticationFilter: TokenAuthenticationFilter) {
+class SecurityConfig(
+    private val tokenAuthenticationFilter: TokenAuthenticationFilter,
+    private val customAuthenticationEntryPoint: CustomAuthenticationEntryPoint,
+    private val customAccessDeniedHandler: CustomAccessDeniedHandler,
+) {
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http
@@ -49,8 +52,8 @@ class SecurityConfig(private val tokenAuthenticationFilter: TokenAuthenticationF
             }
 
             .exceptionHandling {
-                it.authenticationEntryPoint(CustomAuthenticationEntryPoint())
-                it.accessDeniedHandler(CustomAccessDeniedHandler())
+                it.authenticationEntryPoint(customAuthenticationEntryPoint)
+                it.accessDeniedHandler(customAccessDeniedHandler)
             }
 
             .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)

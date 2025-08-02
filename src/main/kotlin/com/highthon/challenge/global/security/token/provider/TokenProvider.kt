@@ -2,11 +2,17 @@ package com.highthon.challenge.global.security.token.provider
 
 import com.highthon.challenge.domain.auth.dto.response.TokenResponse
 import com.highthon.challenge.domain.auth.enums.TokenPurpose
+import com.highthon.challenge.domain.auth.exception.AuthError
+import com.highthon.challenge.global.exception.CustomException
 import com.highthon.challenge.global.security.token.properties.TokenProperties
 import io.jsonwebtoken.Claims
+import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.MalformedJwtException
+import io.jsonwebtoken.UnsupportedJwtException
 import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.security.Keys
+import io.jsonwebtoken.security.SignatureException
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.util.Date
@@ -52,8 +58,17 @@ class TokenProvider(private val tokenProperties: TokenProperties) {
     private fun parseClaims(token: String): Claims = try {
         parser.parseSignedClaims(token).payload
     } catch (e: Exception) {
-        throw RuntimeException("토큰을 파싱하는 데 실패했습니다.", e)
+        val error = when (e) {
+            is ExpiredJwtException -> AuthError.EXPIRED_TOKEN
+            is SignatureException -> AuthError.INVALID_TOKEN_SIGNATURE
+            is MalformedJwtException -> AuthError.MALFORMED_TOKEN
+            is UnsupportedJwtException -> AuthError.UNSUPPORTED_TOKEN
+            is IllegalArgumentException -> AuthError.EMPTY_CLAIMS
+            else -> AuthError.INVALID_TOKEN
+        }
+        throw CustomException(error)
     }
+
 
     private fun buildToken(
         userId: Long,

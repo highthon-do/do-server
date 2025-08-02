@@ -4,7 +4,9 @@ import com.highthon.challenge.domain.mission.entity.MissionEntity
 import com.highthon.challenge.domain.mission.enums.MissionStatus
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
 
 @Repository
 interface MissionRepository : JpaRepository<MissionEntity, Long> {
@@ -19,15 +21,10 @@ interface MissionRepository : JpaRepository<MissionEntity, Long> {
     fun countByWriterId(writerId: Long): Long
 
     @Query(
-        """
-        SELECT DATE(m.createdAt) 
-        FROM MissionEntity m 
-        WHERE m.writer.id = :writerId AND m.isPrivate = false 
-        GROUP BY DATE(m.createdAt)
-        ORDER BY DATE(m.createdAt) DESC
-        """
+        value = "SELECT DISTINCT DATE(m.created_at) FROM missions m WHERE m.writer_id = :writerId",
+        nativeQuery = true
     )
-    fun findMissionDatesByWriterId(writerId: Long): List<java.time.LocalDate>
+    fun findMissionDatesByWriterId(@Param("writerId") writerId: Long): List<java.sql.Date>
 
     @Query(
         """
@@ -57,5 +54,5 @@ interface MissionRepository : JpaRepository<MissionEntity, Long> {
     ): MissionEntity?
 
     @Query("SELECT m.writer.id, COUNT(m) FROM MissionEntity m GROUP BY m.writer.id")
-    fun findAllUserMissionCounts(): List<Pair<Long, Int>>
+    fun findAllUserMissionCounts(): List<Pair<Long, Long>>
 }
